@@ -14,6 +14,7 @@ Step 1 foundation for the Patos-Marinza Development Project Monthly Progress Rep
 ## Setup
 
 1. Copy `.env.example` to `.env.local`. The supplied URL and publishable key are already safe for frontend use. Do not add a service-role key.
+   GitHub stores the source code only; it does not provide these runtime variables. For a hosted build, add the same two variables in the hosting provider's project settings, then redeploy.
 2. In the Supabase SQL editor, run every migration in numeric order, from `202609160001_foundation.sql` through `202609160007_import_may_2025_production.sql`. Migration 006 creates the Production workspace schema and security policies. Migration 007 imports the workbook-sourced January–May 2025 production figures needed for May comparisons and YTD.
 3. Create an Auth user in Supabase. The database trigger creates its profile and grants `VIEWER` by default.
 4. Promote the first administrator in the SQL editor:
