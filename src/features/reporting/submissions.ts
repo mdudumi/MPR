@@ -1,0 +1,5 @@
+import { useEffect, useState } from 'react'
+import { supabase } from '../../lib/supabase'
+
+export type Submission = { id: string; status: 'NOT_STARTED' | 'IN_PROGRESS' | 'COMPLETE' | 'LOCKED'; completion_percentage: number; department: { code: string; name: string }[] }
+export function useMonthlySubmissions(periodId?: string) { const [submissions, setSubmissions] = useState<Submission[]>([]); const [loading, setLoading] = useState(Boolean(periodId)); useEffect(() => { let cancelled = false; async function load() { if (!periodId || !supabase) { setLoading(false); return } setLoading(true); const { data } = await supabase.from('monthly_submissions').select('id,status,completion_percentage,department:departments(code,name)').eq('reporting_period_id', periodId); if (!cancelled) { const normalized = (data ?? []).map((row: any) => ({ ...row, department: Array.isArray(row.department) ? row.department : row.department ? [row.department] : [], status: row.status })); setSubmissions(normalized as Submission[]); setLoading(false) } } load(); return () => { cancelled = true } }, [periodId]); return { submissions, loading } }
