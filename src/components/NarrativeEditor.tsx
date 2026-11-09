@@ -1,10 +1,11 @@
 import { Bold, List, ListOrdered, Save } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
+import { normalizeNarrativeHtml } from '../lib/sanitizeNarrative'
 
 export function NarrativeEditor({ label, initialValue, onSave, disabled = false, hideSave = false }: { label: string; initialValue?: string; onSave: (value: string) => Promise<void>; disabled?: boolean; hideSave?: boolean }) {
   const editor = useRef<HTMLDivElement>(null); const [value, setValue] = useState(initialValue ?? ''); const [saved, setSaved] = useState(initialValue ?? ''); const [saving, setSaving] = useState(false); const [error, setError] = useState<string | null>(null)
-  useEffect(() => { const next = initialValue ?? ''; setValue(next); setSaved(next); if (editor.current) editor.current.innerHTML = next }, [initialValue])
+  useEffect(() => { const next = normalizeNarrativeHtml(initialValue ?? ''); setValue(next); setSaved(next); if (editor.current) editor.current.innerHTML = next }, [initialValue])
   const command = (name: string) => { editor.current?.focus(); document.execCommand(name) }
-  async function save() { setSaving(true); setError(null); try { await onSave(value); setSaved(value) } catch (err) { setError(err instanceof Error ? err.message : 'Save failed.') } finally { setSaving(false) } }
+  async function save() { const normalized = normalizeNarrativeHtml(value); setValue(normalized); setSaving(true); setError(null); try { await onSave(normalized); setSaved(normalized); if (editor.current) editor.current.innerHTML = normalized } catch (err) { setError(err instanceof Error ? err.message : 'Save failed.') } finally { setSaving(false) } }
   return <section className="narrative-card"><div className="narrative-title"><h3>{label}</h3><span className={value === saved ? 'saved-state' : 'unsaved-state'}>{value === saved ? 'Saved' : 'Unsaved changes'}</span></div><div className="editor-toolbar"><button type="button" onClick={() => command('bold')} disabled={disabled} title="Bold"><Bold size={15}/></button><button type="button" onClick={() => command('insertUnorderedList')} disabled={disabled} title="Bulleted list"><List size={15}/></button><button type="button" onClick={() => command('insertOrderedList')} disabled={disabled} title="Numbered list"><ListOrdered size={15}/></button></div><div ref={editor} className="rich-editor" contentEditable={!disabled} suppressContentEditableWarning onInput={e => setValue(e.currentTarget.innerHTML)} data-placeholder={`Enter ${label.toLowerCase()}…`} />{error && <p className="field-error">{error}</p>}{!hideSave && <button className="button secondary" onClick={save} disabled={disabled || saving || value === saved}>{saving ? 'Saving…' : <><Save size={15}/> Save {label}</>}</button>}</section>
 }
