@@ -116,7 +116,7 @@ export function HseSummaryPage() {
   const ltiRows = [['BANKERS_LTI', 'Bankers'], ['CONTRACTOR_LTI', 'Contractors']] as const
 
   return <>
-    <section className="page-heading"><div><p className="eyebrow">1.1 HEALTH, SAFETY, SECURITY AND ENVIRONMENT INCIDENTS OVERVIEW</p><h1>HSSC&E Summary</h1><p>{reportingMonthLabel(activePeriod.period_date)} · pale columns are calculated from the workbook-backed reporting history.</p></div><button className="button primary" onClick={save} disabled={saving || isLocked}>{saving ? 'Saving…' : <><Save size={16} /> Save summary</>}</button></section>
+    <section className="page-heading"><div><p className="eyebrow">1.1 HEALTH, SAFETY, SECURITY AND ENVIRONMENT INCIDENTS OVERVIEW</p><h1>HSSC&E Summary</h1><p>{reportingMonthLabel(activePeriod.period_date)} · pale columns are calculated from the workbook-backed reporting history.</p></div><button className="button primary" data-section-save-for="HSSC&E Summary,Incidents" onClick={save} disabled={saving || isLocked}>{saving ? 'Saving…' : <><Save size={16} /> Save summary</>}</button></section>
     <SubmissionControls periodId={activePeriod.id} departmentCode="HSE" sectionCode="HSSE_INCIDENTS" completion={summaryCompletion} disabled={isLocked} />
     {message && <div className={`notice ${message.includes('saved') ? 'success' : 'error'}`}>{message}</div>}
     {isLocked && <div className="notice locked">This reporting period is locked. All monthly values are read-only.</div>}
