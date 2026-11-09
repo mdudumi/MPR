@@ -18,7 +18,15 @@ const defaultTables = (periodDate: string): Row[] => {
   return [
     { id: '', table_number: 1, table_title: 'Inputs to active Ecology Pits', table_data: [] },
     { id: '', table_number: 2, table_title: 'Recorded Inputs/Outputs to all Ecology Pit locations', table_data: [] },
-    { id: '', table_number: 3, table_title: 'Recorded Inputs of Waste Processed at Waste Management Facilities', table_data: [] },
+    { id: '', table_number: 3, table_title: 'Recorded Inputs of Waste Processed at Waste Management Facilities', table_data: [
+      { equipment: 'Sludge treatment BPAL', method: '', waste: 'Sludge + Oily waste', unit: 'm³', volume_treated: 0, ash_solid_weight_ton: 0, destination: 'N/A' },
+      { equipment: 'Recycling and incineration facility', method: 'Burned', waste: 'Incinerator', unit: 't', volume_treated: 0, ash_solid_weight_ton: 0, destination: 'N/A' },
+      { equipment: 'Recycling and incineration facility', method: 'Recycled', waste: 'Cardboard', unit: 'm³', volume_treated: 0, ash_solid_weight_ton: 0, destination: 'N/A' },
+      { equipment: 'Recycling and incineration facility', method: 'Recycled', waste: 'Cement bags', unit: 'm³', volume_treated: 0, ash_solid_weight_ton: 0, destination: 'N/A' },
+      { equipment: 'Recycling and incineration facility', method: 'Recycled', waste: 'Plastic', unit: 'm³', volume_treated: 0, ash_solid_weight_ton: 0, destination: 'N/A' },
+      { equipment: 'Antea Cement Sludge Treatment', method: '', waste: 'Sludge and Oily waste', unit: 'm³', volume_treated: 0, ash_solid_weight_ton: 0, destination: 'N/A' },
+      { equipment: 'BPAL sewage treatment plant', method: '', waste: 'Sewage', unit: 't', volume_treated: 0, ash_solid_weight_ton: 0, destination: 'N/A' },
+    ] },
     { id: '', table_number: 4, table_title: 'Sum of Drilling Mud and Cuttings to Ecopits', table_data: [{ period: month, volume_m3: 0 }] },
     { id: '', table_number: 5, table_title: 'Recorded Inputs and Waste Processed at BPAL Dewatering facility', table_data: [{ period: month, delivered_to_drying_area_m3: 0, delivered_to_centrifuge_m3: 0, water_out_of_centrifuge_to_drilling_m3: 0 }] },
     { id: '', table_number: 6, table_title: `Calculated gaseous emissions in the oilfield for ${month}`, table_data: [{ total_quantity_generated_m3: 0, produce_energy_m3: 0, free_up_spaces_m3: 0, vented_gases_m3: 0, biologically_treated_gases_m3: 0, gases_transferred_other_subjects_m3: 0 }] },
@@ -53,7 +61,7 @@ export function EnvironmentPageModern() {
       const byNumber = new Map(loadedTables.map(table => [table.table_number, table]))
       setTables(defaults.map(fallback => {
         const existing = byNumber.get(fallback.table_number)
-        return existing ? { ...fallback, ...existing, table_title: fallback.table_title } : fallback
+        return existing ? { ...fallback, ...existing, table_title: fallback.table_title, table_data: existing.table_data?.length ? existing.table_data : fallback.table_data } : fallback
       }))
       setIncidents((incidentsResult.data ?? []) as Incident[])
       setLoading(false)
