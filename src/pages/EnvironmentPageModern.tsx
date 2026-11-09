@@ -13,6 +13,18 @@ import { supabase } from '../lib/supabase'
 type Row = { id: string; table_number: number; table_title: string; table_data: any[] }
 type Incident = { id?: string; incident_date: string | null; incident: string; description: string | null }
 
+const defaultTables = (periodDate: string): Row[] => {
+  const month = new Intl.DateTimeFormat('en-GB', { month: 'long', year: 'numeric', timeZone: 'UTC' }).format(new Date(`${periodDate}T00:00:00Z`))
+  return [
+    { id: '', table_number: 1, table_title: 'Inputs to active Ecology Pits', table_data: [] },
+    { id: '', table_number: 2, table_title: 'Recorded Inputs/Outputs to all Ecology Pit locations', table_data: [] },
+    { id: '', table_number: 3, table_title: 'Recorded Inputs of Waste Processed at Waste Management Facilities', table_data: [] },
+    { id: '', table_number: 4, table_title: 'Sum of Drilling Mud and Cuttings to Ecopits', table_data: [{ period: month, volume_m3: 0 }] },
+    { id: '', table_number: 5, table_title: 'Recorded Inputs and Waste Processed at BPAL Dewatering facility', table_data: [{ period: month, delivered_to_drying_area_m3: 0, delivered_to_centrifuge_m3: 0, water_out_of_centrifuge_to_drilling_m3: 0 }] },
+    { id: '', table_number: 6, table_title: `Calculated gaseous emissions in the oilfield for ${month}`, table_data: [{ total_quantity_generated_m3: 0, produce_energy_m3: 0, free_up_spaces_m3: 0, vented_gases_m3: 0, biologically_treated_gases_m3: 0, gases_transferred_other_subjects_m3: 0 }] },
+  ]
+}
+
 export function EnvironmentPageModern() {
   const { activePeriod } = useReportingPeriod()
   const [report, setReport] = useState<any>({})
@@ -36,7 +48,8 @@ export function EnvironmentPageModern() {
       const firstError = reportResult.error ?? tablesResult.error ?? incidentsResult.error
       if (firstError) setMessage(`Environment data could not be loaded: ${firstError.message}`)
       setReport(reportResult.data ?? {})
-      setTables((tablesResult.data ?? []) as Row[])
+      const loadedTables = (tablesResult.data ?? []) as Row[]
+      setTables(loadedTables.length ? loadedTables : defaultTables(activePeriod.period_date))
       setIncidents((incidentsResult.data ?? []) as Incident[])
       setLoading(false)
     }
@@ -55,9 +68,11 @@ export function EnvironmentPageModern() {
   }
   async function saveTable(row: Row, data: any[]) {
     if (!supabase) return
-    const { error } = await supabase.from('environment_supporting_tables').update({ table_data: data }).eq('id', row.id)
-    if (error) { setMessage(`Could not save Table ${row.table_number}: ${error.message}`); throw error }
-    setTables(current => current.map(item => item.id === row.id ? { ...item, table_data: data } : item))
+    const result = row.id
+      ? await supabase.from('environment_supporting_tables').update({ table_data: data }).eq('id', row.id).select('id,table_number,table_title,table_data').single()
+      : await supabase.from('environment_supporting_tables').upsert({ reporting_period_id: activePeriod.id, table_number: row.table_number, table_title: row.table_title, table_data: data }, { onConflict: 'reporting_period_id,table_number' }).select('id,table_number,table_title,table_data').single()
+    if (result.error) { setMessage(`Could not save Table ${row.table_number}: ${result.error.message}`); throw result.error }
+    setTables(current => current.map(item => item.table_number === row.table_number ? (result.data as Row) : item))
     setSaveNotice(`Table ${row.table_number} saved successfully.`)
     window.setTimeout(() => setSaveNotice(null), 3500)
   }
