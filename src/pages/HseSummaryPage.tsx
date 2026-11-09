@@ -119,8 +119,12 @@ export function HseSummaryPage() {
     if (exposureSaveTimer.current) clearTimeout(exposureSaveTimer.current)
     if (supabase && activePeriod && !isLocked) {
       exposureSaveTimer.current = setTimeout(async () => {
-        const result = await supabase.from('hse_exposure_hours').upsert({ reporting_period_id: activePeriod.id, ...nextHours }, { onConflict: 'reporting_period_id' })
-        if (result.error) setMessage(result.error.message)
+        let result = await supabase.from('hse_exposure_hours').update(nextHours).eq('reporting_period_id', activePeriod.id).select('reporting_period_id')
+        if (!result.error && !(result.data?.length)) {
+          result = await supabase.from('hse_exposure_hours').insert({ reporting_period_id: activePeriod.id, ...nextHours }).select('reporting_period_id')
+        }
+        if (result.error) setMessage(`Exposure hours could not be saved: ${result.error.message}`)
+        else setHours(current => ({ ...current, [activePeriod.id]: nextHours }))
       }, 500)
     }
   }
