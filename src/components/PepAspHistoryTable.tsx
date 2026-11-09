@@ -48,7 +48,9 @@ export function PepAspHistoryTable({ periods, activePeriodId, oilM3, pepQuantity
       const isActive = period.id === activePeriodId
       const monthlyOil = isActive ? (oilM3 ?? production?.net_oil_m3 ?? imported?.monthlyOil ?? null) : (production?.net_oil_m3 ?? imported?.monthlyOil ?? null)
       const pep = isActive ? (pepQuantity ?? pepRecord?.pep_quantity_tonne ?? imported?.pep ?? null) : (pepRecord?.pep_quantity_tonne ?? imported?.pep ?? null)
-      const rate = pepRecord?.asp_rate ?? effectiveAspRate
+      // ASP is defined by the report as 3% of net oil after PEP.
+      // Ignore legacy/null database rates so historical months calculate consistently.
+      const rate = effectiveAspRate
       const afterPep = monthlyOil == null || pep == null ? null : monthlyOil - pep * (pepRecord?.pep_assumed_m3_per_tonne ?? 1)
       const asp = afterPep == null ? null : afterPep * rate
       return { period: period.period_date, monthlyOil, pep, afterPep, asp, totalTake: pep == null || asp == null ? null : pep + asp }
