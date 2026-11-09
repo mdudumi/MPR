@@ -112,7 +112,14 @@ export function HseSummaryPage() {
   if (!types.length) return <EmptyState title="HSSC&E Summary is not configured" detail="Apply the Supabase foundation migrations to load the existing incident types." />
   const summaryCompletion = incidentRows.every(([code]) => Object.prototype.hasOwnProperty.call(month, code)) && Boolean(hours[activePeriod.id]) ? 100 : 0
   const editNumber = (code: string, text: string) => setMonth(current => ({ ...current, [code]: Math.max(0, Number(text) || 0) }))
-  const editHours = (key: keyof Hours, text: string) => setHours(current => ({ ...current, [activePeriod.id]: { ...currentHours, [key]: Math.max(0, Number(text) || 0) } }))
+  const editHours = (key: keyof Hours, text: string) => {
+    const nextHours = { ...currentHours, [key]: Math.max(0, Number(text) || 0) }
+    setHours(current => ({ ...current, [activePeriod.id]: nextHours }))
+    if (supabase && activePeriod && !isLocked) {
+      void supabase.from('hse_exposure_hours').upsert({ reporting_period_id: activePeriod.id, ...nextHours }, { onConflict: 'reporting_period_id' })
+        .then(result => { if (result.error) setMessage(result.error.message) })
+    }
+  }
   const summaryRows = [...incidentRows, ['TOTALS', 'Totals'] as const, ['TOTAL_RECORDABLE', 'Total Recordable'] as const, ['TOTAL_RECORDABLE_FREQUENCY_INDEX', 'Total Recordable Frequency Index (per million exposure hours)'] as const]
   const ltiRows = [['BANKERS_LTI', 'Bankers'], ['CONTRACTOR_LTI', 'Contractors']] as const
 
