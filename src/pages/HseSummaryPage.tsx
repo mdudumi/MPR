@@ -70,8 +70,9 @@ export function HseSummaryPage() {
   const typeByCode = Object.fromEntries(types.map(type => [type.code, type]))
   const currentHours = hours[activePeriod?.id ?? ''] ?? emptyHours
   const prior = (code: string) => history[previous?.id ?? '']?.[code] ?? 0
-  const ytd = (code: string) => (incidentYtdBaseline[code] ?? 0) + ytdPeriods.reduce((sum, period) => sum + (history[period.id]?.[code] ?? 0), 0)
-  const inception = (code: string) => (typeByCode[code]?.inception_baseline ?? 0) + periodsThroughSelectedMonth.reduce((sum, period) => sum + (history[period.id]?.[code] ?? 0), 0)
+  const incidentForPeriod = (periodId: string, code: string) => periodId === activePeriod?.id ? (month[code] ?? 0) : (history[periodId]?.[code] ?? 0)
+  const ytd = (code: string) => (incidentYtdBaseline[code] ?? 0) + ytdPeriods.reduce((sum, period) => sum + incidentForPeriod(period.id, code), 0)
+  const inception = (code: string) => (typeByCode[code]?.inception_baseline ?? 0) + periodsThroughSelectedMonth.reduce((sum, period) => sum + incidentForPeriod(period.id, code), 0)
   const hoursYtd = (key: keyof Hours) => exposureYtdBaseline[key] + ytdPeriods.reduce((sum, period) => sum + (hours[period.id]?.[key] ?? 0), 0)
   const hoursInception = (key: keyof Hours) => inceptionExposure[key] + periodsThroughSelectedMonth.reduce((sum, period) => sum + (hours[period.id]?.[key] ?? 0), 0)
   const frequency = (incidents: number, exposure: number) => exposure ? incidents * 1_000_000 / exposure : 0
