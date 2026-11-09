@@ -56,9 +56,9 @@
 .status-complete { color: #176740; background: #ddf3e6; }.annex-block { border-top: 1px solid #e5ecf2; }.annex-block:first-of-type { border-top: 0; }.annex-source { margin: -6px 0 13px; color: #71849a; font-size: 11px; }
 
 /* Preserve the workbook's narrative bullets inside the editable report sections. */
-.rich-editor ul { margin: 0; padding-left: 1.4rem; list-style: disc outside; }
-.rich-editor ol { margin: 0; padding-left: 1.4rem; list-style: decimal outside; }
-.rich-editor li { display: list-item; margin: 0 0 .28rem; }
+.rich-editor ul { margin: 0 0 .6rem; padding-left: 1.8rem; list-style: disc outside; }
+.rich-editor ol { margin: 0 0 .6rem; padding-left: 1.8rem; list-style: decimal outside; }
+.rich-editor li { display: list-item; margin: 0 0 .45rem; padding-left: .2rem; }
 .rich-editor p { margin: 0 0 .5rem; }
 .hse-incident-table input, .hse-incident-table textarea { width: 100%; box-sizing: border-box; padding: 2px 0; border: 0; border-radius: 0; color: #254260; background: transparent; font: inherit; font-size: 12px; }
 .hse-incident-table textarea { min-height: 76px; resize: vertical; line-height: 1.4; }
