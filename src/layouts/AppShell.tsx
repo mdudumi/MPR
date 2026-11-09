@@ -16,7 +16,7 @@ export function AppShell() {
       section.dataset.sectionTools = 'true'
       section.classList.add('section-collapsed')
       const titleText = title.textContent?.trim() ?? ''
-      const editable = !!section.querySelector('input, textarea, [contenteditable="true"]') || /^2\.[34]\b/.test(titleText)
+      const editable = !!section.querySelector('input, textarea, [contenteditable="true"]') || /^2\.[34]\b/.test(titleText) || /^Table\s+[1-6]\b/i.test(titleText) || titleText === 'Environmental Incidents'
       if (!editable && !section.classList.contains('chart-section')) {
         section.classList.add('section-automatic')
         const automatic = document.createElement('span')
