@@ -49,7 +49,12 @@ export function EnvironmentPageModern() {
       if (firstError) setMessage(`Environment data could not be loaded: ${firstError.message}`)
       setReport(reportResult.data ?? {})
       const loadedTables = (tablesResult.data ?? []) as Row[]
-      setTables(loadedTables.length ? loadedTables : defaultTables(activePeriod.period_date))
+      const defaults = defaultTables(activePeriod.period_date)
+      const byNumber = new Map(loadedTables.map(table => [table.table_number, table]))
+      setTables(defaults.map(fallback => {
+        const existing = byNumber.get(fallback.table_number)
+        return existing ? { ...fallback, ...existing, table_title: fallback.table_title } : fallback
+      }))
       setIncidents((incidentsResult.data ?? []) as Incident[])
       setLoading(false)
     }
