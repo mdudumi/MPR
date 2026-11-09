@@ -19,8 +19,8 @@ export function PepAspHistoryTable({ periods, activePeriodId, oilM3, pepQuantity
   const [loadedProduction, setLoadedProduction] = useState<HistoricalProduction[]>(productionHistory)
   const [loadedPep, setLoadedPep] = useState<HistoricalPep[]>(pepHistory)
   useEffect(() => {
-    setLoadedProduction(productionHistory)
-    setLoadedPep(pepHistory)
+    if (productionHistory.length) setLoadedProduction(productionHistory)
+    if (pepHistory.length) setLoadedPep(pepHistory)
   }, [productionHistory, pepHistory])
   useEffect(() => {
     if (!supabase || !activePeriodId) return
