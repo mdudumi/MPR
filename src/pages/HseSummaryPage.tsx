@@ -1,5 +1,5 @@
 import { Save } from 'lucide-react'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { EmptyState, LoadingState } from '../components/AsyncState'
 import { reportingMonthLabel } from '../components/ReportingMonthSelector'
 import { SubmissionControls } from '../components/SubmissionControls'
@@ -26,6 +26,7 @@ export function HseSummaryPage() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState<string | null>(null)
+  const exposureSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
     let cancelled = false
@@ -115,9 +116,12 @@ export function HseSummaryPage() {
   const editHours = (key: keyof Hours, text: string) => {
     const nextHours = { ...currentHours, [key]: Math.max(0, Number(text) || 0) }
     setHours(current => ({ ...current, [activePeriod.id]: nextHours }))
+    if (exposureSaveTimer.current) clearTimeout(exposureSaveTimer.current)
     if (supabase && activePeriod && !isLocked) {
-      void supabase.from('hse_exposure_hours').upsert({ reporting_period_id: activePeriod.id, ...nextHours }, { onConflict: 'reporting_period_id' })
-        .then(result => { if (result.error) setMessage(result.error.message) })
+      exposureSaveTimer.current = setTimeout(async () => {
+        const result = await supabase.from('hse_exposure_hours').upsert({ reporting_period_id: activePeriod.id, ...nextHours }, { onConflict: 'reporting_period_id' })
+        if (result.error) setMessage(result.error.message)
+      }, 500)
     }
   }
   const summaryRows = [...incidentRows, ['TOTALS', 'Totals'] as const, ['TOTAL_RECORDABLE', 'Total Recordable'] as const, ['TOTAL_RECORDABLE_FREQUENCY_INDEX', 'Total Recordable Frequency Index (per million exposure hours)'] as const]
