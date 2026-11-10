@@ -141,13 +141,16 @@ async function exportWorkingPdf(report: ReportData, periodDate: string) {
     const value = Number(production[key])
     return Number.isFinite(value) ? number(value, 3) + ' m³ (' + number(value * factor, 3) + ' bbl)' : 'not entered'
   }
+  const salesForText = (report.salesHistory ?? report.sales).map(item => row(item)).filter(item => String(item.reporting_period_id) === String(activePeriod?.id))
+  const netSalesM3 = (type: string) => Number(salesForText.find(item => text(item.delivery_type) === type)?.net_oil_m3) || 0
+  const totalNetSalesM3 = salesForText.reduce((sum, item) => sum + (Number(item.net_oil_m3) || 0), 0)
   pdfLines(pdf, [
     '• Net oil production for the month was ' + bblText('net_oil_m3') + ', which equates to an average of ' + number(Number(production.net_oil_bbl) / 31, 3) + ' bopd average oil.',
     'In order to have a better understanding of production from each group of wells a production table is attached under Annex 1, showing production data well by well.',
     '• Pre-existing production (PEP) for the month was ' + number(Number(production.pep_tonne), 3) + ' tonne.',
     '• Total gasoil/solar was ' + bblText('gasoil_solar_m3') + '.',
     '• Crude oil used as fuel during the month was ' + bblText('crude_oil_used_as_fuel_m3') + '.',
-    '• Total Sales and Deliveries were ' + bblText('sales_total_m3') + ' during this month. ' + bblText('export_sales_m3') + ' were export sales and ' + bblText('pep_asp_deliveries_m3') + ' were deliveries to Albpetrol as PEP & ASP.',
+    '• Total Sales and Deliveries were ' + number(totalNetSalesM3, 3) + ' m³ during this month. ' + number(netSalesM3('EXPORT_SALES'), 3) + ' m³ were export sales and ' + number(netSalesM3('PEP_ASP_DELIVERIES'), 3) + ' m³ were deliveries to Albpetrol as PEP & ASP. Meanwhile, sales at Al Global Oil were ' + number(Number(production.global_oil_sales_m3) || 0, 3) + ' m³ and ' + number(Number(production.rbh_sales_m3) || 0, 3) + ' m³ at R.B.H. Beline.',
     '• The net oil inventory changed from ' + number(Number(production.inventory_start_m3), 3) + ' m³ to ' + number(Number(production.inventory_end_m3), 3) + ' m³.',
     'Oil proration factor for this month was ' + number(Number(production.oil_proration_percent), 3) + '%, meanwhile, water proration was ' + number(Number(production.water_proration_percent), 3) + '%. '
   ].join('\n\n'), page)
