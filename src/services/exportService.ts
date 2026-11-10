@@ -8,7 +8,7 @@ type ReportData = Awaited<ReturnType<typeof getMonthlyProgressReport>>
 type Row = Record<string, unknown>
 export type ExportSource = 'WORKING_REPORT' | 'FINALIZED_VERSION'
 const row = (value: unknown): Row => value && typeof value === 'object' ? value as Row : {}
-const number = (value: unknown, decimals = 1) => typeof value === 'number' ? value.toLocaleString('en-US', { maximumFractionDigits: decimals }) : '—'
+const number = (value: unknown, decimals = 1) => { const numeric = typeof value === 'number' ? value : typeof value === 'string' && value.trim() !== '' ? Number(value) : NaN; return Number.isFinite(numeric) ? numeric.toLocaleString('en-US', { maximumFractionDigits: decimals }) : '—' }
 const text = (value: unknown) => typeof value === 'string' ? value : ''
 const filenamePeriod = (periodDate: string) => periodDate.slice(0, 7)
 const save = (content: BlobPart, name: string, type: string) => { const url = URL.createObjectURL(new Blob([content], { type })); const link = document.createElement('a'); link.href = url; link.download = name; link.click(); window.setTimeout(() => URL.revokeObjectURL(url), 1000) }
