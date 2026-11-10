@@ -3,7 +3,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { EmptyState, LoadingState } from '../components/AsyncState'
 import { reportingMonthLabel } from '../components/ReportingMonthSelector'
 import { SubmissionControls } from '../components/SubmissionControls'
-import { incidentRows, numberText, recordableCodes, total, type IncidentType } from '../features/hse/hseSummary'
+import { incidentRows, numberText, total, type IncidentType } from '../features/hse/hseSummary'
 import { useReportingPeriod } from '../features/reporting/ReportingPeriodContext'
 import { supabase } from '../lib/supabase'
 import { setReportSectionStatus } from '../features/reporting/sectionStatus'
@@ -34,7 +34,7 @@ export function HseSummaryPage() {
       if (!supabase || !activePeriod) { setLoading(false); return }
       setLoading(true); setMessage(null)
       const [{ data: incidentTypes, error: typeError }, { data: incidents, error: incidentError }, { data: exposure, error: exposureError }, { data: exposureItD, error: exposureItDError }, { data: incidentYtd, error: incidentYtdError }, { data: exposureYtd, error: exposureYtdError }, { data: monthlyRecordables, error: recordablesError }, { data: recordableBase, error: recordableBaseError }] = await Promise.all([
-        supabase.from('hse_incident_types').select('id,code,name,display_order,inception_baseline').eq('is_active', true).order('display_order'),
+        supabase.from('hse_incident_types').select('id,code,name,display_order,inception_baseline,is_recordable').eq('is_active', true).order('display_order'),
         supabase.from('hse_monthly_incidents').select('reporting_period_id,incident_type_id,incident_count'),
         supabase.from('hse_exposure_hours').select('reporting_period_id,bankers_hours,contractor_hours'),
         supabase.from('hse_exposure_inception_baselines').select('bankers_hours,contractor_hours').eq('id', true).maybeSingle(),
@@ -72,7 +72,7 @@ export function HseSummaryPage() {
   const currentHours = hours[activePeriod?.id ?? ''] ?? emptyHours
   const prior = (code: string) => history[previous?.id ?? '']?.[code] ?? 0
   const incidentForPeriod = (periodId: string, code: string) => periodId === activePeriod?.id ? (month[code] ?? 0) : (history[periodId]?.[code] ?? 0)
-  const recordableForPeriod = (periodId: string) => incidentRows.reduce((sum, [code]) => sum + (recordableCodes.has(code) ? incidentForPeriod(periodId, code) : 0), 0)
+  const recordableForPeriod = (periodId: string) => incidentRows.reduce((sum, [code]) => sum + (typeByCode[code]?.is_recordable ? incidentForPeriod(periodId, code) : 0), 0)
   const ytd = (code: string) => (incidentYtdBaseline[code] ?? 0) + ytdPeriods.reduce((sum, period) => sum + incidentForPeriod(period.id, code), 0)
   const inception = (code: string) => (typeByCode[code]?.inception_baseline ?? 0) + periodsThroughSelectedMonth.reduce((sum, period) => sum + incidentForPeriod(period.id, code), 0)
   const hoursYtd = (key: keyof Hours) => exposureYtdBaseline[key] + ytdPeriods.reduce((sum, period) => sum + (hours[period.id]?.[key] ?? 0), 0)
