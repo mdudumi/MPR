@@ -14,7 +14,10 @@ import { incidentRows } from '../features/hse/hseSummary'
 
 type RecordValue = Record<string, unknown>
 type ReportData = Awaited<ReturnType<typeof getMonthlyProgressReport>>
-const number = (value: unknown, decimals = 1) => typeof value === 'number' ? new Intl.NumberFormat('en-US', { maximumFractionDigits: decimals }).format(value) : '—'
+const number = (value: unknown, decimals = 1) => {
+  const numeric = typeof value === 'number' ? value : typeof value === 'string' && value.trim() !== '' ? Number(value) : NaN
+  return Number.isFinite(numeric) ? new Intl.NumberFormat('en-US', { maximumFractionDigits: decimals }).format(numeric) : '—'
+}
 const text = (value: unknown) => typeof value === 'string' && value.trim() ? value : 'No data reported'
 const row = (value: unknown): RecordValue => value && typeof value === 'object' ? value as RecordValue : {}
 
