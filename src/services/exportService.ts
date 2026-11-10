@@ -166,7 +166,7 @@ async function exportWorkingPdf(report: ReportData, periodDate: string) {
   // input table is intentionally omitted from the PDF layout.
   if (page.y > 205) { pdf.addPage(); page.y = 22 }
   addSubsection('2.2', 'Year Figures and Trend')
-  const chartRows = historyProduction.filter(item => Number(item.net_oil_bbl) > 0)
+  const chartRows = historyProduction.filter(item => String(periodLabel(item.reporting_period_id)).slice(0, 7) <= String(activePeriod?.period_date ?? '9999-12').slice(0, 7) && Number(item.net_oil_bbl) > 0)
   if (chartRows.length) {
     if (page.y > 205) { pdf.addPage(); page.y = 22 }
     const chartX = 22; const chartY = page.y + 8; const chartW = 166; const chartH = 52; const maxValue = Math.max(...chartRows.map(item => Number(item.net_oil_bbl) || 0), 1)
@@ -176,7 +176,7 @@ async function exportWorkingPdf(report: ReportData, periodDate: string) {
     chartRows.forEach((item, index) => { const value = Number(item.net_oil_bbl) || 0; const height = (value / maxValue) * (chartH - 8); const x = chartX + 4 + index * ((chartW - 8) / chartRows.length); pdf.setFillColor(142, 142, 148); pdf.rect(x, chartY + chartH - height, barW, height, 'F'); pdf.setTextColor(25, 25, 25); pdf.setFontSize(6.5); pdf.text(number(value / 31, 1), x + barW / 2, chartY + chartH - height - 2, { align: 'center' }); pdf.setTextColor(107, 114, 128); pdf.text(periodLabel(item.reporting_period_id).slice(0, 7), x + barW / 2, chartY + chartH + 5, { align: 'center' }) })
     page.y = chartY + chartH + 12
   } else pdfLines(pdf, 'No production data reported for the selected year.', page)
-  const datedProduction = historyProduction.filter(item => ['net_oil_tonne','net_oil_m3','net_oil_bbl','water_m3','sand_m3','gas_nm3','days_on_production'].some(key => Number(item[key]) > 0))
+  const datedProduction = historyProduction.filter(item => String(periodLabel(item.reporting_period_id)).slice(0, 7) <= String(activePeriod?.period_date ?? '9999-12').slice(0, 7) && ['net_oil_tonne','net_oil_m3','net_oil_bbl','water_m3','sand_m3','gas_nm3','days_on_production'].some(key => Number(item[key]) > 0))
   if (datedProduction.length) {
     objectTable(['Month', 'Net Oil (tonne)', 'Net Oil (m³)', 'Net Oil (Bbl)', 'Water (m³)', 'Sand (m³)', 'Gas (m³)', 'Days on Prod.'], datedProduction.map(item => ({
       period: periodLabel(item.reporting_period_id), net_oil_tonne: display(item.net_oil_tonne), net_oil_m3: display(item.net_oil_m3), net_oil_bbl: display(item.net_oil_bbl), water_m3: display(item.water_m3), sand_m3: display(item.sand_m3), gas_nm3: display(item.gas_nm3), days_on_production: display(item.days_on_production)
