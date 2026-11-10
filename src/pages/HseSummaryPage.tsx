@@ -3,7 +3,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { EmptyState, LoadingState } from '../components/AsyncState'
 import { reportingMonthLabel } from '../components/ReportingMonthSelector'
 import { SubmissionControls } from '../components/SubmissionControls'
-import { incidentRows, numberText, total, type IncidentType } from '../features/hse/hseSummary'
+import { incidentRows, numberText, recordableCodes, total, type IncidentType } from '../features/hse/hseSummary'
 import { useReportingPeriod } from '../features/reporting/ReportingPeriodContext'
 import { supabase } from '../lib/supabase'
 import { setReportSectionStatus } from '../features/reporting/sectionStatus'
@@ -72,6 +72,7 @@ export function HseSummaryPage() {
   const currentHours = hours[activePeriod?.id ?? ''] ?? emptyHours
   const prior = (code: string) => history[previous?.id ?? '']?.[code] ?? 0
   const incidentForPeriod = (periodId: string, code: string) => periodId === activePeriod?.id ? (month[code] ?? 0) : (history[periodId]?.[code] ?? 0)
+  const recordableForPeriod = (periodId: string) => incidentRows.reduce((sum, [code]) => sum + (recordableCodes.has(code) ? incidentForPeriod(periodId, code) : 0), 0)
   const ytd = (code: string) => (incidentYtdBaseline[code] ?? 0) + ytdPeriods.reduce((sum, period) => sum + incidentForPeriod(period.id, code), 0)
   const inception = (code: string) => (typeByCode[code]?.inception_baseline ?? 0) + periodsThroughSelectedMonth.reduce((sum, period) => sum + incidentForPeriod(period.id, code), 0)
   const hoursYtd = (key: keyof Hours) => exposureYtdBaseline[key] + ytdPeriods.reduce((sum, period) => sum + (hours[period.id]?.[key] ?? 0), 0)
@@ -79,10 +80,10 @@ export function HseSummaryPage() {
   const frequency = (incidents: number, exposure: number) => exposure ? incidents * 1_000_000 / exposure : 0
   const totalCodes = incidentRows.map(([code]) => code)
   const recordableValue = (mode: 'last' | 'this' | 'ytd' | 'inception') => {
-    if (mode === 'last') return recordables[previous?.id ?? ''] ?? 0
-    if (mode === 'this') return recordables[activePeriod?.id ?? ''] ?? 0
-    if (mode === 'ytd') return recordableBaseline.ytd_total_recordable + ytdPeriods.reduce((sum, period) => sum + (recordables[period.id] ?? 0), 0)
-    return recordableBaseline.inception_total_recordable + periodsThroughSelectedMonth.reduce((sum, period) => sum + (recordables[period.id] ?? 0), 0)
+    if (mode === 'last') return recordableForPeriod(previous?.id ?? '')
+    if (mode === 'this') return recordableForPeriod(activePeriod?.id ?? '')
+    if (mode === 'ytd') return recordableBaseline.ytd_total_recordable + ytdPeriods.reduce((sum, period) => sum + recordableForPeriod(period.id), 0)
+    return recordableBaseline.inception_total_recordable + periodsThroughSelectedMonth.reduce((sum, period) => sum + recordableForPeriod(period.id), 0)
   }
   const value = (code: string, mode: 'last' | 'this' | 'ytd' | 'inception') => {
     if (code === 'TOTALS') return total(Object.fromEntries(totalCodes.map(item => [item, mode === 'last' ? prior(item) : mode === 'this' ? month[item] ?? 0 : mode === 'ytd' ? ytd(item) : inception(item)])))
